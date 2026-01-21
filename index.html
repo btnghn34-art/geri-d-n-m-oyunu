@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="tr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>Geri Dönüşüm Avcısı</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      body {
+        touch-action: none;
+        overflow: hidden;
+        user-select: none;
+        -webkit-user-select: none;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      }
+      .item {
+        position: absolute;
+        touch-action: none;
+        transform: translate(-50%, -50%);
+        will-change: top, left;
+      }
+      /* Bounce animation for menu */
+      @keyframes bounce-slow {
+        0%, 100% { transform: translateY(-5%); }
+        50% { transform: translateY(5%); }
+      }
+      .animate-bounce-slow {
+        animation: bounce-slow 2s infinite ease-in-out;
+      }
+    </style>
+  <script type="importmap">
+{
+  "imports": {
+    "react": "https://esm.sh/react@^19.2.3",
+    "lucide-react": "https://esm.sh/lucide-react@^0.562.0",
+    "react/": "https://esm.sh/react@^19.2.3/"
+  }
+}
+</script>
+</head>
+  <body class="bg-slate-50 text-slate-900 h-screen w-screen overflow-hidden">
+    
+    <!-- Game Container -->
+    <div id="game-container" class="relative w-full h-full flex flex-col">
+      
+      <!-- HUD -->
+      <div class="absolute top-0 left-0 right-0 h-20 bg-white/90 backdrop-blur-sm z-30 flex justify-between items-center px-6 shadow-sm">
+        <div class="flex items-center gap-2 text-blue-600">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          <span id="timer-display" class="text-2xl font-bold font-mono">60</span>
+        </div>
+        <div class="text-center hidden sm:block">
+          <h1 class="text-sm font-bold text-slate-400 uppercase tracking-widest">Geri Dönüşüm Avcısı</h1>
+        </div>
+        <div class="flex items-center gap-2 text-orange-500">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
+          <span id="score-display" class="text-3xl font-black font-mono">0</span>
+        </div>
+      </div>
+
+      <!-- Game World (Falling Items) -->
+      <div id="world" class="relative flex-1 w-full bg-gradient-to-b from-sky-100 to-sky-50 overflow-hidden z-10">
+        <!-- Guidelines -->
+        <div class="absolute inset-0 flex pointer-events-none opacity-10 w-full h-full">
+          <div class="flex-1 border-r border-slate-400 border-dashed"></div>
+          <div class="flex-1 border-r border-slate-400 border-dashed"></div>
+          <div class="flex-1"></div>
+        </div>
+      </div>
+
+      <!-- Bins Area -->
+      <div id="bins" class="relative h-[25%] w-full flex z-20 shadow-[0_-10px_40px_-15px_rgba(0,0,0,0.3)]">
+        <!-- Plastic Bin -->
+        <div id="bin-plastic" class="flex-1 bg-yellow-400 border-t-8 border-yellow-600 flex flex-col items-center justify-center p-2 transition-colors">
+          <div class="opacity-50 mb-2">
+            <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-yellow-900"><path d="M7 19a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2H9a2 2 0 0 0-2 2v10Z"/><path d="M12 3v6"/></svg>
+          </div>
+          <span class="font-black text-yellow-900 tracking-wider text-lg sm:text-xl">PLASTİK</span>
+        </div>
+        <!-- Glass Bin -->
+        <div id="bin-glass" class="flex-1 bg-green-500 border-t-8 border-green-700 flex flex-col items-center justify-center p-2 transition-colors">
+          <div class="opacity-50 mb-2">
+            <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-green-900"><path d="M8 22h8"/><path d="M7 10h10"/><path d="M12 15a5 5 0 0 0 5-5c0-2-.5-4-2-8H9c-1.5 4-2 6-2 8a5 5 0 0 0 5 5Z"/></svg>
+          </div>
+          <span class="font-black text-green-900 tracking-wider text-lg sm:text-xl">CAM</span>
+        </div>
+        <!-- Metal Bin -->
+        <div id="bin-metal" class="flex-1 bg-slate-400 border-t-8 border-slate-600 flex flex-col items-center justify-center p-2 transition-colors">
+          <div class="opacity-50 mb-2">
+            <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-slate-900"><path d="m2 22 1-1h3l9-9"/><path d="M3 21v-3l9-9"/><path d="m15 6 3.4-3.4a2.1 2.1 0 1 1 3 3L18 9l.9.9"/><path d="m10 9 5 5"/></svg>
+          </div>
+          <span class="font-black text-slate-900 tracking-wider text-lg sm:text-xl">METAL</span>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Start Screen Overlay -->
+    <div id="start-screen" class="absolute inset-0 z-50 bg-black/60 backdrop-blur-md flex items-center justify-center p-4">
+      <div class="bg-white rounded-3xl shadow-2xl p-8 max-w-md w-full text-center animate-bounce-slow">
+        <div class="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
+          <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-green-600"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg>
+        </div>
+        <h1 class="text-3xl font-black text-slate-800 mb-2">Geri Dönüşüm<br>Avcısı</h1>
+        <p class="text-slate-500 mb-8">
+          Doğru atıkları doğru kutulara at, puanları topla!
+        </p>
+        <button id="start-btn" class="w-full bg-green-600 hover:bg-green-700 active:scale-95 transition-all text-white font-bold py-4 rounded-xl text-xl shadow-lg flex items-center justify-center gap-2">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+          BAŞLA
+        </button>
+      </div>
+    </div>
+
+    <!-- Game Over Screen Overlay -->
+    <div id="game-over-screen" class="hidden absolute inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
+      <div class="bg-white rounded-3xl shadow-2xl p-8 max-w-md w-full text-center">
+        <h2 class="text-3xl font-bold text-slate-800 mb-2">Süre Doldu!</h2>
+        <div class="my-6">
+          <p class="text-slate-500 uppercase text-sm font-bold tracking-wider">SKORUN</p>
+          <div id="final-score" class="text-6xl font-black text-green-600">0</div>
+        </div>
+        <div class="grid grid-cols-2 gap-4 mb-8 text-sm">
+           <div class="bg-slate-100 p-3 rounded-lg">
+             <div class="font-bold text-green-600 text-lg">+10</div>
+             <div class="text-slate-400">Doğru</div>
+           </div>
+           <div class="bg-slate-100 p-3 rounded-lg">
+             <div class="font-bold text-red-500 text-lg">-5</div>
+             <div class="text-slate-400">Yanlış</div>
+           </div>
+        </div>
+        <button id="restart-btn" class="w-full bg-blue-600 hover:bg-blue-700 active:scale-95 transition-all text-white font-bold py-4 rounded-xl text-xl shadow-lg flex items-center justify-center gap-2">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+          TEKRAR OYNA
+        </button>
+      </div>
+    </div>
+
+    <script type="module" src="/index.tsx"></script>
+  </body>
+</html>
